@@ -1,6 +1,24 @@
 /**
  * Created by kra on 6/12/2017.
  */
+function deepClone(obj, state, property, value){
+    // clone the whole state
+    if (typeof property === 'undefined'){
+        return JSON.parse(JSON.stringify(obj));
+    }
+
+    // clone only what we need
+    var x = {};
+    if (typeof property === "array"){
+        for (var i = 0; i < property.length; i++){
+            x[property[i]] = {};
+        }
+        property = property[i];
+    }
+    x[property] = value;
+    return Object.assign({}, state, x);
+}
+
 function createStore(reducer, initState){
 
     // this is our store's state
