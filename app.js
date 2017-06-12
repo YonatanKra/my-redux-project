@@ -22,7 +22,7 @@ function deepClone(obj, state, property, value){
 function createStore(reducer, initState){
 
     // this is our store's state
-    var list = initState || {
+    var state = initState || {
             selected: undefined, // the selected index
             list: [] //list of strings
         };
@@ -34,20 +34,29 @@ function createStore(reducer, initState){
          * @returns {*|Array}
          */
         getState: function(){
-            return list;
+            return deepClone(state);
         },
         /**
          * @description activate the reducer
          * @param action
          */
         dispatch: function(action){
-            list = reducer(list, action);
+            state = reducer(state, action);
+
             for (var i = 0; i < events.length; i++){
-                events[i](list, action);
+                events[i](state, action);
             }
         },
-        subscribe: function(cb){
+        /**
+         * @description subscribes to store events.  Also triggers callback with current state. Can be disabled by sending getLatest
+         * @param cb - {Function}
+         * @param getLatest - {Boolean}
+         */
+        subscribe: function(cb, getLatest){
             events.push(cb);
+            if (!getLatest){
+                cb(this.getState()); //the new subscriber would get the current state
+            }
         },
         unsubscribe: function(index){
             events.splice(index, 1);
@@ -55,16 +64,22 @@ function createStore(reducer, initState){
     }
 }
 
+/**
+ * @description gets a state, and handles it according to the action. Returns original state if no valid action was sent.
+ * @param lastState
+ * @param action
+ * @returns {*}
+ */
 function listReducer(lastState, action){
 
-    // create in a new variable in order to prevent sending a new object when no change happened
-    var newState = JSON.parse(JSON.stringify(lastState)); // simple naive clone... better to use lodash :)
+    var newState = deepClone(lastState);
+    // act according to action
     switch(action.type){
         case "ADD_ITEM":
             newState.list.push(action.payload);
             break;
         case "DELETE_ITEM":
-            newState.list.splice(newState.indexOf(action.payload), 1);
+            newState.list.splice(newState.list.indexOf(action.payload), 1);
             break;
         case "DELETE_ITEM_BY_INDEX":
             newState.list.splice(action.payload, 1);
@@ -78,6 +93,7 @@ function listReducer(lastState, action){
                 list: []
             };
         default:
+            // if no action was taken, return undefined, and the state would not be changed + no subscription will fire (since no actions was taken)
             return lastState;
     }
     return newState;
