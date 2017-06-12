@@ -79,10 +79,22 @@ function listReducer(lastState, action){
             newState.list.push(action.payload);
             break;
         case "DELETE_ITEM":
-            newState.list.splice(newState.list.indexOf(action.payload), 1);
+            var index = newState.list.indexOf(action.payload);
+            newState.list.splice(index, 1);
+            if (index === newState.selected){
+                newState.selected = undefined;
+            }else if (newState.selected > index){
+                newState.selected -= 1;
+            }
             break;
         case "DELETE_ITEM_BY_INDEX":
             newState.list.splice(action.payload, 1);
+
+            if (newState.selected === action.payload) {
+                newState.selected = undefined;
+            }else if (newState.selected > action.payload){
+                newState.selected -= 1;
+            }
             break;
         case "SELECT":
             newState.selected = action.payload;
