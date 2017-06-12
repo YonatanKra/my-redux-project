@@ -56,22 +56,32 @@ function listReducer(lastState, action){
     return newState;
 }
 
+// since we have no angular/react, we do it "manually" with jQuery...
+function listViewHandler(state) {
+    if (typeof $ === 'undefined') {
+        return;
+    }
+    var listHtml = '';
+    for (var i = 0; i < state.length; i++) {
+        listHtml += '<li onclick="selectItem()" data-index="' + i + '" class="list-item">' + state[i] + '</li>';
+    }
+    $('#list').html(listHtml);
+}
+
+function addItemButton() {
+    var payload = $('#list-item').val();
+    if (payload === '') {
+        return;
+    }
+
+    myStore.dispatch({
+        type: "ADD_ITEM",
+        payload: payload
+    });
+}
+
 var INIT_STATE = ['Yuval', 'Arbel'];
 
 var myStore = createStore(listReducer, INIT_STATE);
 
-console.log(myStore.getState());
-
-myStore.dispatch({
-    type: "ADD_ITEM",
-    payload: "Maor700-Superpower"
-});
-
-console.log(myStore.getState());
-
-myStore.dispatch({
-    type: "DELETE_ITEM_BY_INDEX",
-    payload: 2
-});
-
-console.log(myStore.getState());
+myStore.subscribe(listViewHandler);
