@@ -88,6 +88,9 @@ function listReducer(lastState, action){
             }
             break;
         case "DELETE_ITEM_BY_INDEX":
+            if (typeof action.payload === 'undefined'){
+                return lastState; // an action with invalid argument is an invalid action and nothing changed
+            }
             newState.list.splice(action.payload, 1);
 
             if (newState.selected === action.payload) {
