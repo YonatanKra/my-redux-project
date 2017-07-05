@@ -1,16 +1,16 @@
 /**
  * Created by kra on 6/12/2017.
  */
-function deepClone(obj, state, property, value){
+function deepClone(obj, state, property, value) {
     // clone the whole state
-    if (typeof property === 'undefined'){
+    if (typeof property === 'undefined') {
         return JSON.parse(JSON.stringify(obj));
     }
 
     // clone only what we need
     var x = {};
-    if (property.constructor === Array){
-        for (var i = 0; i < property.length; i++){
+    if (property.constructor === Array) {
+        for (var i = 0; i < property.length; i++) {
             x[property[i]] = {};
         }
         property = property[i];
@@ -70,22 +70,22 @@ function createStore(reducer, initState, middlewares) {
     return store;
 }
 
-function combineReducers(reducers){
+function combineReducers(reducers) {
     var keys = Object.keys(reducers);
 
-    return function(state, action){
+    return function (state, action) {
         var nextState = {};
         var previousState;
         var reducer;
         var key;
         var changed = false;
-        for (var i = 0; i < keys.length; i++){
+        for (var i = 0; i < keys.length; i++) {
             key = keys[i];
             previousState = state[key];
             reducer = reducers[key];
             nextState[key] = reducer(previousState, action);
 
-            changed = nextState[key] !== previousState;
+            changed = changed || nextState[key] !== previousState;
         }
 
         // if there was a change, return the next state. Otherwise, return the old state.
@@ -104,16 +104,16 @@ function applyMiddleware(store, middlewares) {
     var dispatch = store.dispatch;
 
     // for each middleware, apply the chain
-    middlewares.forEach(function(middleware) {
-        dispatch = middleware(store)(dispatch);
+    middlewares.forEach(function (middleware) {
+            dispatch = middleware(store)(dispatch);
         }
     );
 
     // override the store's dispatch with the first middleware (remember the reverse?)
-    return Object.assign({}, store, { dispatch: dispatch });
+    return Object.assign({}, store, {dispatch: dispatch});
 }
 
-function listApp(){
+function listApp() {
     return {
         requests: requestsReducer,
         list: listReducer
@@ -130,10 +130,12 @@ function requestsReducer(lastState, action) {
         case "REQUEST_SUCCESS":
             newState.requesting = false;
             newState.success = true;
+            newState.recievedData = action.payload;
             break;
         case "REQUEST_FAILURE":
             newState.requesting = false;
             newState.success = false;
+            newState.recievedData = undefined;
             break;
         default:
             return lastState;
@@ -205,32 +207,32 @@ function fetchData(jsonUrl) {
  * @param action
  * @returns {*}
  */
-function listReducer(lastState, action){
+function listReducer(lastState, action) {
 
     var newState = deepClone(lastState);
     // act according to action
-    switch(action.type){
+    switch (action.type) {
         case "ADD_ITEM":
             newState.list.push(action.payload);
             break;
         case "DELETE_ITEM":
             var index = newState.list.indexOf(action.payload);
             newState.list.splice(index, 1);
-            if (index === newState.selected){
+            if (index === newState.selected) {
                 newState.selected = undefined;
-            }else if (newState.selected > index){
+            } else if (newState.selected > index) {
                 newState.selected -= 1;
             }
             break;
         case "DELETE_ITEM_BY_INDEX":
-            if (typeof action.payload === 'undefined'){
+            if (typeof action.payload === 'undefined') {
                 return lastState; // an action with invalid argument is an invalid action and nothing changed
             }
             newState.list.splice(action.payload, 1);
 
             if (newState.selected === action.payload) {
                 newState.selected = undefined;
-            }else if (newState.selected > action.payload){
+            } else if (newState.selected > action.payload) {
                 newState.selected -= 1;
             }
             break;
@@ -261,11 +263,11 @@ function listViewHandler(state) {
     }
     var list = $('#list');
     list.html(listHtml);
-    
+
     $(list.children()[state.list.selected]).addClass('selected');
 }
 
-function selectItem(){
+function selectItem() {
     myStore.dispatch({
         type: "SELECT",
         payload: event.target.dataset.index
@@ -284,11 +286,15 @@ function addItemButton() {
     });
 }
 
-function deletItem(){
+function deletItem() {
     myStore.dispatch({
         type: "DELETE_ITEM_BY_INDEX",
         payload: myStore.getState().list.selected
     });
+}
+
+function fetchItems() {
+    myStore.dispatch(fetchData('data.json'));
 }
 
 var INIT_STATE = {
@@ -297,6 +303,8 @@ var INIT_STATE = {
         list: ['Yuval', 'Arbel']
     },
     requests: {
+        success: undefined,
+        recievedData: undefined,
         requesting: false
     }
 
@@ -305,3 +313,19 @@ var INIT_STATE = {
 var myStore = createStore(combineReducers(listApp()), INIT_STATE, [functionMiddleware]);
 
 myStore.subscribe(listViewHandler);
+
+myStore.subscribe(requestsHandler, true);
+
+function requestsHandler(state){
+    switch (state.requests.success){
+        case true:
+            alert("Fetch success! (I know I shouldn't use alert - but it's a demo)");
+            consoe.log(state.requests.recievedData);
+            break;
+        case false:
+            alert('Fetch failure :(');
+            break;
+        default:
+            alert('Fetch started...');
+    }
+}
