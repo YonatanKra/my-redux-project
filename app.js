@@ -87,6 +87,26 @@ function combineReducers(reducers){
     }
 }
 
+function applyMiddleware(store, middlewares) {
+    // copy the middlewares
+    middlewares = middlewares.slice();
+
+    // reverse the order
+    middlewares.reverse();
+
+    // save the original dispatch
+    var dispatch = store.dispatch;
+
+    // for each middleware, apply the chain
+    middlewares.forEach(function(middleware) {
+        dispatch = middleware(store)(dispatch);
+        }
+    );
+
+    // override the store's dispatch with the first middleware (remember the reverse?)
+    return Object.assign({}, store, { dispatch: dispatch });
+}
+
 function listApp(){
     return {
         requests: requestsReducer,
