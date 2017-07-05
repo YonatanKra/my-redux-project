@@ -143,6 +143,63 @@ function requestsReducer(lastState, action) {
 }
 
 /**
+ * @description a middleware that allows to send functions as an action
+ * @param store
+ * @returns {Function}
+ */
+function functionMiddleware(store) {
+    return function (dispatch) {
+        return function (action) {
+
+            if (typeof action === 'function'){
+                return action(dispatch);
+            }
+
+            // it expects the dispatcher to return an action
+            return dispatch(action);
+        }
+    }
+}
+
+/**
+ * @description a middleware that handles our data fetch
+ * @param jsonUrl - {String]
+ * @returns {Function}
+ */
+
+function fetchData(jsonUrl) {
+    return function (dispatch) {
+        // notify everyone we are requesting data
+        dispatch({
+            type: "REQUEST"
+        });
+
+        // now fetch the data
+        fetch(jsonUrl)
+            .then(function (response) {
+                // if ok, return the json
+                if (response.ok) {
+                    return response.blob();
+                }
+                // if not ok, dispatch the error event
+                dispatch({
+                    type: "REQUEST_FAILURE"
+                })
+            })
+            .then(function (responseJson) {
+                if (typeof responseJson === 'undefined'){
+                    return;
+                }
+                // dispatch the success with the recieved data
+                dispatch({
+                    type: "REQUEST_SUCCESS",
+                    payload: responseJson
+                })
+            })
+    }
+}
+
+/**
  * @description gets a state, and handles it according to the action. Returns original state if no valid action was sent.
  * @param lastState
  * @param action
