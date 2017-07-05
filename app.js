@@ -120,14 +120,20 @@ function listApp(){
     };
 }
 
-function requestsReducer(lastState, action){
+function requestsReducer(lastState, action) {
     var newState = deepClone(lastState);
-    switch (action.type){
+    switch (action.type) {
         case "REQUEST":
+            newState.requesting = true;
+            newState.success = undefined;
             break;
         case "REQUEST_SUCCESS":
+            newState.requesting = false;
+            newState.success = true;
             break;
         case "REQUEST_FAILURE":
+            newState.requesting = false;
+            newState.success = false;
             break;
         default:
             return lastState;
