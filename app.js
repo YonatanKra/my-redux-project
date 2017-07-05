@@ -302,6 +302,6 @@ var INIT_STATE = {
 
 };
 
-var myStore = createStore(combineReducers(listApp()), INIT_STATE);
+var myStore = createStore(combineReducers(listApp()), INIT_STATE, [functionMiddleware]);
 
 myStore.subscribe(listViewHandler);
