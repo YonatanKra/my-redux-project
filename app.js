@@ -19,7 +19,7 @@ function deepClone(obj, state, property, value){
     return Object.assign({}, state, x);
 }
 
-function createStore(reducer, initState){
+function createStore(reducer, initState, middlewares) {
 
     // this is our store's state
     var state = initState || {
@@ -28,22 +28,22 @@ function createStore(reducer, initState){
         };
     var events = [];
 
-    return {
+    var store = {
         /**
          * @description just return the stae
          * @returns {*|Array}
          */
-        getState: function(){
+        getState: function () {
             return deepClone(state);
         },
         /**
          * @description activate the reducer
          * @param action
          */
-        dispatch: function(action){
+        dispatch: function (action) {
             state = reducer(state, action);
 
-            for (var i = 0; i < events.length; i++){
+            for (var i = 0; i < events.length; i++) {
                 events[i](state, action);
             }
         },
@@ -52,16 +52,22 @@ function createStore(reducer, initState){
          * @param cb - {Function}
          * @param getLatest - {Boolean}
          */
-        subscribe: function(cb, getLatest){
+        subscribe: function (cb, getLatest) {
             events.push(cb);
-            if (!getLatest){
+            if (!getLatest) {
                 cb(this.getState()); //the new subscriber would get the current state
             }
         },
-        unsubscribe: function(index){
+        unsubscribe: function (index) {
             events.splice(index, 1);
         }
     }
+
+    if (typeof middlewares !== 'undefined'){
+        return applyMiddleware(store, middlewares);
+    }
+
+    return store;
 }
 
 function combineReducers(reducers){
