@@ -99,6 +99,10 @@ function requestsReducer(lastState, action){
     switch (action.type){
         case "REQUEST":
             break;
+        case "REQUEST_SUCCESS":
+            break;
+        case "REQUEST_FAILURE":
+            break;
         default:
             return lastState;
     }
