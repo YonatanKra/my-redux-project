@@ -9,7 +9,7 @@ function deepClone(obj, state, property, value){
 
     // clone only what we need
     var x = {};
-    if (typeof property === "array"){
+    if (property.constructor === Array){
         for (var i = 0; i < property.length; i++){
             x[property[i]] = {};
         }
@@ -62,6 +62,48 @@ function createStore(reducer, initState){
             events.splice(index, 1);
         }
     }
+}
+
+function combineReducers(reducers){
+    var keys = Object.keys(reducers);
+
+    return function(state, action){
+        var nextState = {};
+        var previousState;
+        var reducer;
+        var key;
+        var changed = false;
+        for (var i = 0; i < keys.length; i++){
+            key = keys[i];
+            previousState = state[key];
+            reducer = reducers[key];
+            nextState[key] = reducer(previousState, action);
+
+            changed = nextState[key] !== previousState;
+        }
+
+        // if there was a change, return the next state. Otherwise, return the old state.
+        return changed ? nextState : state;
+    }
+}
+
+function listApp(){
+    return {
+        requests: requestsReducer,
+        list: listReducer
+    };
+}
+
+function requestsReducer(lastState, action){
+    var newState = deepClone(lastState);
+    switch (action.type){
+        case "REQUEST":
+            break;
+        default:
+            return lastState;
+    }
+
+    return newState;
 }
 
 /**
@@ -119,13 +161,15 @@ function listViewHandler(state) {
     if (typeof $ === 'undefined') {
         return;
     }
+    var listItems = state.list.list;
     var listHtml = '';
-    for (var i = 0; i < state.list.length; i++) {
-        listHtml += '<li onclick="selectItem()" data-index="' + i + '" class="list-item">' + state.list[i] + '</li>';
+    for (var i = 0; i < listItems.length; i++) {
+        listHtml += '<li onclick="selectItem()" data-index="' + i + '" class="list-item">' + listItems[i] + '</li>';
     }
-    $('#list').html(listHtml);
+    var list = $('#list');
+    list.html(listHtml);
     
-    $($('#list').children()[state.selected]).addClass('selected');
+    $(list.children()[state.list.selected]).addClass('selected');
 }
 
 function selectItem(){
@@ -150,15 +194,21 @@ function addItemButton() {
 function deletItem(){
     myStore.dispatch({
         type: "DELETE_ITEM_BY_INDEX",
-        payload: myStore.getState().selected
+        payload: myStore.getState().list.selected
     });
 }
 
 var INIT_STATE = {
-    selected: 1,
-    list: ['Yuval', 'Arbel']
+    list: {
+        selected: 1,
+        list: ['Yuval', 'Arbel']
+    },
+    requests: {
+        requesting: false
+    }
+
 };
 
-var myStore = createStore(listReducer, INIT_STATE);
+var myStore = createStore(combineReducers(listApp()), INIT_STATE);
 
 myStore.subscribe(listViewHandler);
