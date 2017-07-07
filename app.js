@@ -150,15 +150,27 @@ function requestsReducer(lastState, action) {
  * @returns {Function}
  */
 function functionMiddleware(store) {
-    return function (dispatch) {
+    return function (next) {
         return function (action) {
 
             if (typeof action === 'function'){
-                return action(dispatch);
+                return action(next);
             }
 
             // it expects the dispatcher to return an action
-            return dispatch(action);
+            return next(action);
+        }
+    }
+}
+
+function loggerMiddleware(store) {
+    return function (next) {
+        return function (action) {
+
+            console.log(action);
+
+            // it expects the dispatcher to return an action
+            return next(action);
         }
     }
 }
@@ -310,7 +322,7 @@ var INIT_STATE = {
 
 };
 
-var myStore = createStore(combineReducers(listApp()), INIT_STATE, [functionMiddleware]);
+var myStore = createStore(combineReducers(listApp()), INIT_STATE, [functionMiddleware, loggerMiddleware]);
 
 myStore.subscribe(listViewHandler);
 
@@ -326,6 +338,7 @@ function requestsHandler(state){
             alert('Fetch failure :(');
             break;
         default:
-            alert('Fetch started...');
+            state.requests.requesting ? alert('Fetch started...') : '';
+
     }
 }
