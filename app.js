@@ -61,7 +61,7 @@ function createStore(reducer, initState, middlewares) {
         unsubscribe: function (index) {
             events.splice(index, 1);
         }
-    }
+    };
 
     if (typeof middlewares !== 'undefined'){
         return applyMiddleware(store, middlewares);
@@ -193,7 +193,7 @@ function fetchData(jsonUrl) {
             .then(function (response) {
                 // if ok, return the json
                 if (response.ok) {
-                    return response.blob();
+                    return response.json();
                 }
                 // if not ok, dispatch the error event
                 dispatch({
@@ -306,7 +306,7 @@ function deletItem() {
 }
 
 function fetchItems() {
-    myStore.dispatch(fetchData('data.json'));
+    myStore.dispatch(fetchData('http://localhost:10010/'));
 }
 
 var INIT_STATE = {
@@ -332,7 +332,7 @@ function requestsHandler(state){
     switch (state.requests.success){
         case true:
             alert("Fetch success! (I know I shouldn't use alert - but it's a demo)");
-            consoe.log(state.requests.recievedData);
+            console.log(state.requests.recievedData);
             break;
         case false:
             alert('Fetch failure :(');
